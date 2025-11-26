@@ -1,0 +1,67 @@
+{
+  "name": "ai-code-analyzer",
+  "displayName": "AI Code Analyzer",
+  "description": "Real-time AI code analysis and review",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aiAnalyze.openPreview",
+        "title": "AI Analyze: Open Preview"
+      }
+    ],
+    "configuration": {
+      "title": "AI Code Analyzer",
+      "properties": {
+        "aiAnalyze.apiEndpoint": {
+          "type": "string",
+          "default": "https://api.openai.com/v1/chat/completions",
+          "description": "API Endpoint URL"
+        },
+        "aiAnalyze.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API Key for the AI service"
+        },
+        "aiAnalyze.model": {
+          "type": "string",
+          "default": "gpt-4",
+          "description": "Model name to use"
+        },
+        "aiAnalyze.promptLanguage": {
+          "type": "string",
+          "default": "zh-CN",
+          "description": "Language for the analysis report"
+        },
+        "aiAnalyze.autoAnalyze": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically analyze on save (skips confirmation)"
+        },
+        "aiAnalyze.debounceTime": {
+          "type": "number",
+          "default": 60000,
+          "description": "Debounce time in milliseconds for auto analysis"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "18.x",
+    "typescript": "^5.1.3"
+  }
+}
