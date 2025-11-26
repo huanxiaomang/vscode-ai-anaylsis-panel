@@ -1,12 +1,13 @@
 {
-  "name": "ai-code-analyzer",
-  "displayName": "AI Code Analyzer",
+  "name": "hxm-ai-analyzer-panel",
+  "displayName": "AI Code Analyzer Panel",
   "description": "Real-time customizable AI code analysis",
   "version": "0.0.1",
-  "publisher": "your-name",
+  "publisher": "huanxiaomang",
   "engines": {
     "vscode": "^1.80.0"
   },
+  "repository": "https://github.com/huanxiaomang/vscode-ai-anaylsis-panel",
   "categories": [
     "Other"
   ],

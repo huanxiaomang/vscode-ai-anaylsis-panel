@@ -12,17 +12,17 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // 支持 VS Code 关闭后重新打开时恢复 Webview（必须）
-    if (vscode.window.registerWebviewPanelSerializer) {
-        vscode.window.registerWebviewPanelSerializer(AIAnalysisPanel.viewType, {
-            async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
-                webviewPanel.webview.options = {
-                    enableScripts: true,
-                    localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'media')]
-                };
-                AIAnalysisPanel.revive(webviewPanel, context.extensionUri, context.globalState);
-            }
-        });
-    }
+    // if (vscode.window.registerWebviewPanelSerializer) {
+    //     vscode.window.registerWebviewPanelSerializer(AIAnalysisPanel.viewType, {
+    //         async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
+    //             webviewPanel.webview.options = {
+    //                 enableScripts: true,
+    //                 localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'media')]
+    //             };
+    //             AIAnalysisPanel.revive(webviewPanel, context.extensionUri, context.globalState);
+    //         }
+    //     });
+    // }
 
     // 文件保存后 → 仅显示「内容已过期」提示（不自动重新分析）
     context.subscriptions.push(
@@ -44,7 +44,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // 启动时自动打开视图
-    AIAnalysisPanel.createOrShow(context.extensionUri, context.globalState);
+    //AIAnalysisPanel.createOrShow(context.extensionUri, context.globalState);
 }
 
 export function deactivate() { }
