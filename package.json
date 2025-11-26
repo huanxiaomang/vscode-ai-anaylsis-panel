@@ -1,61 +1,98 @@
 {
   "name": "ai-code-analyzer",
   "displayName": "AI Code Analyzer",
-  "description": "Real-time AI code analysis and review",
+  "description": "Real-time customizable AI code analysis",
   "version": "0.0.1",
+  "publisher": "your-name",
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onCommand:aiAnalyze.openPreview",
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "aiAnalyze.openPreview",
-        "title": "AI Analyze: Open Preview"
+        "title": "启动AI分析视图"
       }
     ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "aiAnalyze.openPreview",
+          "group": "navigation",
+          "title": "启动 AI 分析视图"
+        }
+      ]
+    },
     "configuration": {
       "title": "AI Code Analyzer",
       "properties": {
-        "aiAnalyze.apiEndpoint": {
-          "type": "string",
-          "default": "https://api.openai.com/v1/chat/completions",
-          "description": "API Endpoint URL"
-        },
         "aiAnalyze.apiKey": {
           "type": "string",
           "default": "",
-          "description": "API Key for the AI service"
+          "description": "API Key"
+        },
+        "aiAnalyze.apiEndpoint": {
+          "type": "string",
+          "default": "https://api.openai.com/v1/chat/completions",
+          "description": "API Endpoint"
         },
         "aiAnalyze.model": {
           "type": "string",
-          "default": "gpt-4",
-          "description": "Model name to use"
+          "default": "gpt-4o-mini",
+          "description": "Model name"
         },
-        "aiAnalyze.promptLanguage": {
-          "type": "string",
-          "default": "zh-CN",
-          "description": "Language for the analysis report"
-        },
-        "aiAnalyze.autoAnalyze": {
-          "type": "boolean",
-          "default": false,
-          "description": "Automatically analyze on save (skips confirmation)"
-        },
-        "aiAnalyze.debounceTime": {
-          "type": "number",
-          "default": 60000,
-          "description": "Debounce time in milliseconds for auto analysis"
+        "aiAnalyze.tabs": {
+          "type": "array",
+          "default": [
+            {
+              "key": "summary",
+              "title": "内容概览",
+              "prompt": "你是一位拥有 10 年以上经验的资深程序员 Leader，正在给新加入项目的成员做代码讲解。\\n文件名称：${fileName}\\n代码内容：\\n```\\n${codeContent}\\n```\\n你是一位专业的产品经理，请用 Markdown 格式输出以下两部分：\\n### 1. 文件整体定位（50-80 字）\\n几句话说明这个文件在整个项目中的角色和核心职责。\\n### 2. 主要功能点\\n- 用通俗、产品化的语言描述这个文件“对外提供了什么能力”\\n- 只能少量出现“实现细节”“具体算法”“变量名”“行号”等技术细节的东西\\n- 像写**需求文档**一样专业完善客观，毫无遗漏地罗列所有功能点，每个功能点有简明扼要的标题也有根据代码转换过来的详细描述，不可遗漏\\n- 因为功能点可能内容很多，所以使用列表或表格体现，并且善用分组、标题、小标题等手段去归类和划分核心和不核心的内容，让文档结构清晰，内容条理分明\\n要求：\\n- **重点** 理性客观，不夸大，不要像广告或营销号一样堆形容词，你的职责只有描述功能。\\n- 语言必须让非本文件作者的开发者 1 分钟内看懂\\n- 绝对不许出现“努力”“优化”“处理”等模糊词\\n- 如果文件是工具类/配置类/测试文件，必须在第一句话明确点出"
+            },
+            {
+              "key": "implementation",
+              "title": "核心实现",
+              "prompt": "你是一位技术极深的程序员 Leader，正在给团队做 Code Review 和技术分享。\\n文件名称：${fileName}\\n代码内容：\\n```\\n${codeContent}\\n```\\n请用 Markdown 格式撰写《实现细节分析》，必须包含以下章节：\\n### 核心职责与定位（简述，100 字以内）\\n### 整体执行流程（用序号或流程图描述主路径）\\n### 关键模块/方法拆解（按重要性排序，每部分说明职责与输入输出）\\n### 重要技术点与实现技巧（包括但不限于：状态管理、错误处理、性能考虑、设计模式、边界处理等）\\n### 潜在风险点简要提示\\n要求：\\n- 所有解释必须基于代码实际内容，不能臆想\\n- 术语使用精准，结构层次清晰，善用表格清除罗列内容\\n- 每小节开头用一句话总结该部分核心结论"
+            },
+            {
+              "key": "optimization",
+              "title": "优化建议",
+              "prompt": "你是一位极其挑剔但又极具建设性的资深程序员 Leader，正在对 ${fileName} 进行正式 Code Review。\\n代码内容：\\n```\\n${codeContent}\\n```\\n请用 Markdown 输出《优化建议报告》，必须包含以下三大板块：\\n### 一、主要问题（按严重程度排序，每条单独列出）\\n- 每条格式：【严重/中/轻】问题描述 + 具体位置（行号或函数名）+ 为什么是问题+xxx（自行发挥）\\n### 二、优化建议（必须一一对应上面的问题）\\n- 每条给出具体、可落地的重构方案或改进代码示例\\n- 如果涉及重构模式，要写出模式名称\\n### 要求：\\n- 必须有具体行号或函数名作为定位\\n- 不能泛泛而谈“建议优化”“可读性差”\\n- 如果代码整体优秀，可以大幅减少“主要问题”部分，\\n- 语气专业且友善，不允许嘲讽或情绪化语言"
+            }
+          ],
+          "description": "自定义分析维度，支持任意数量",
+          "items": {
+            "type": "object",
+            "required": [
+              "key",
+              "title",
+              "prompt"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "prompt": {
+                "type": "string"
+              }
+            }
+          }
         }
       }
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./"
   },

@@ -2,54 +2,49 @@ import * as vscode from 'vscode';
 import { AIAnalysisPanel } from './panel';
 
 export function activate(context: vscode.ExtensionContext) {
-	console.log('AI Code Analyzer is now active!');
+    console.log('AI Code Analyzer is now active!');
 
-	context.subscriptions.push(
-		vscode.commands.registerCommand('aiAnalyze.openPreview', () => {
-			AIAnalysisPanel.createOrShow(context.extensionUri);
-		})
-	);
+    // 命令：打开 AI 分析面板
+    context.subscriptions.push(
+        vscode.commands.registerCommand('aiAnalyze.openPreview', (uri?: vscode.Uri) => {
+            AIAnalysisPanel.createOrShow(context.extensionUri, context.globalState, uri);
+        })
+    );
 
-	if (vscode.window.registerWebviewPanelSerializer) {
-		// Make sure we register a serializer in activation event
-		vscode.window.registerWebviewPanelSerializer(AIAnalysisPanel.viewType, {
-			async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
-				console.log(`Got state: ${state}`);
-				// Reset the webview options so we use latest uri for `localResourceRoots`.
-				webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
-				AIAnalysisPanel.revive(webviewPanel, context.extensionUri);
-			}
-		});
-	}
+    // 支持 VS Code 关闭后重新打开时恢复 Webview（必须）
+    if (vscode.window.registerWebviewPanelSerializer) {
+        vscode.window.registerWebviewPanelSerializer(AIAnalysisPanel.viewType, {
+            async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
+                webviewPanel.webview.options = {
+                    enableScripts: true,
+                    localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'media')]
+                };
+                AIAnalysisPanel.revive(webviewPanel, context.extensionUri, context.globalState);
+            }
+        });
+    }
 
-	// Listen for file saves
-	context.subscriptions.push(
-		vscode.workspace.onDidSaveTextDocument((document) => {
-			if (AIAnalysisPanel.currentPanel) {
-				// Changed: Instead of auto-analyzing, just alert the user
-				AIAnalysisPanel.currentPanel.showStaleAlert(document.fileName);
-			}
-		})
-	);
+    // 文件保存后 → 仅显示「内容已过期」提示（不自动重新分析）
+    context.subscriptions.push(
+        vscode.workspace.onDidSaveTextDocument((doc) => {
+            if (AIAnalysisPanel.currentPanel && doc.fileName === AIAnalysisPanel.currentPanel['_currentFile']) {
+                AIAnalysisPanel.currentPanel.showStaleAlert(doc.fileName);
+            }
+        })
+    );
 
-	// Listen for active editor changes
-	context.subscriptions.push(
-		vscode.window.onDidChangeActiveTextEditor((editor) => {
-			if (editor && AIAnalysisPanel.currentPanel) {
-				AIAnalysisPanel.currentPanel.switchFile(editor.document.fileName);
-			}
-		})
-	);
+
+    // 核心：左侧编辑器切换文件时，右侧面板自动跟随
+    context.subscriptions.push(
+        vscode.window.onDidChangeActiveTextEditor((editor) => {
+            if (editor && AIAnalysisPanel.currentPanel) {
+                AIAnalysisPanel.currentPanel.switchFile(editor.document.fileName);
+            }
+        })
+    );
+
+    // 启动时自动打开视图
+    AIAnalysisPanel.createOrShow(context.extensionUri, context.globalState);
 }
 
-function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
-	return {
-		// Enable javascript in the webview
-		enableScripts: true,
-
-		// And restrict the webview to only loading content from our extension's `media` directory.
-		localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'media')]
-	};
-}
-
-export function deactivate() {}
+export function deactivate() { }
