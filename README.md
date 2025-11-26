@@ -48,7 +48,6 @@
 "aiAnalyze.apiEndpoint": "https://api.siliconflow.cn/v1/chat/completions",
 "aiAnalyze.apiKey": "你的apiKey",
 "aiAnalyze.debounceTime": 1,
-}
 ```
 
 ### 自定义分析维度
