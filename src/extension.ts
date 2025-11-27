@@ -3,7 +3,6 @@ import * as panel from './panel';
 import { Logger } from './utils/logger';
 
 export function activate(context: vscode.ExtensionContext) {
-    Logger.initialize(context);
     Logger.info('AI Code Analyzer is now active!');
 
     context.subscriptions.push(

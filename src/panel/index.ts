@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import { createOrShow, getPanel, postMessage, registerMessageListener, dispose as disposePanel } from './view';
-import { initState, getState, updateCurrentFile, updateTabs, normalizeKey, saveState } from './state';
+import { initState, getState, updateCurrentFile, updateTabs, normalizeKey, saveState, getTabs } from './state';
 import { runSingleTabAnalysis, cancelSingleTab, cancelAllTasksForFile } from './ai';
 import { AnalysisResult, TabConfig } from './types';
+import { Logger } from '../utils/logger';
 
 export { getPanel, disposePanel };
 
@@ -52,6 +53,14 @@ function handleMessage(message: any) {
                 vscode.commands.executeCommand('revealInExplorer', vscode.Uri.file(targetFile));
             }
             break;
+        case "toggleDisable":
+            if (message.tabKey) {
+                const tabs = getTabs();
+                const tab = tabs.find(t => t.key === message.tabKey);
+                if (tab) tab.disable = message.disable;
+                updateTabs(tabs);
+            }
+            break;
     }
 }
 
@@ -63,21 +72,22 @@ export function switchFile(filePath: string) {
     const key = normalizeKey(filePath);
     const cached = state.cache.get(key);
 
-    // Get tabs configuration
-    const config = vscode.workspace.getConfiguration("aiAnalyze");
-    const tabs = config.get<TabConfig[]>("tabs") || [];
-    updateTabs(tabs);
+    const tabs = getTabs();
+
 
     if (cached) {
         // Calculate which tabs need to be requested (none, since we have cache)
-        const needRequestArray: string[] = [];
-
+        const needRequestArray: string[] = tabs
+            .filter(t => !t.disable && cached.status[t.key] !== 'completed')
+            .map(t => t.key);
+        Logger.info(`Switching to file ${filePath}, need to request tabs: ${needRequestArray.join(", ")}`);
         // Send tabs first, then load cached data
         postMessage({
             command: "initTabs",
             fileName: filePath,
+            status: cached.status,
             relativePath: vscode.workspace.asRelativePath(filePath),
-            tabs: tabs.map(t => ({ key: t.key, title: t.title, disable: t.disable === true })),
+            tabs,
             needRequestArray
         });
         sendLoadFileMessage(filePath, cached);
@@ -144,9 +154,7 @@ async function analyzeCurrentFile(forceRegenerate: boolean, explicitFilePath?: s
         return;
     }
 
-    const config = vscode.workspace.getConfiguration("aiAnalyze");
-    const tabs = config.get<TabConfig[]>("tabs") || [];
-    updateTabs(tabs);
+    const tabs = getTabs();
 
     if (tabs.length === 0) {
         postMessage({ command: "error", text: "请在设置中配置 aiAnalyze.tabs" });
@@ -170,8 +178,9 @@ async function analyzeCurrentFile(forceRegenerate: boolean, explicitFilePath?: s
     postMessage({
         command: "initTabs",
         fileName: filePath,
+        status: newResult.status,
         relativePath: vscode.workspace.asRelativePath(filePath),
-        tabs: tabs.map(t => ({ key: t.key, title: t.title, disable: t.disable === true })),
+        tabs,
         needRequestArray
     });
 }
@@ -182,6 +191,7 @@ function sendLoadFileMessage(filePath: string, result: AnalysisResult) {
         fileName: filePath,
         relativePath: vscode.workspace.asRelativePath(filePath),
         data: result.data,
+        tabs: getTabs(),
         status: result.status,
         timestamp: result.timestamp,
         isStale: result.isStale
@@ -198,6 +208,7 @@ function sendPartialMessage(filePath: string) {
         fileName: filePath,
         relativePath: vscode.workspace.asRelativePath(filePath),
         data: cached.data,
+        tabs: getTabs(),
         status: cached.status,
         timestamp: cached.timestamp
     });

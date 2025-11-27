@@ -147,6 +147,7 @@ export async function runSingleTabAnalysis(filePath: string, tabKey: string) {
                 postMessage({
                     command: "chunk",
                     fileName: filePath,
+                    status: cached.status,
                     tabKey,
                     text: chunk,
                     fullText: cached.data[tabKey]
@@ -163,7 +164,7 @@ export async function runSingleTabAnalysis(filePath: string, tabKey: string) {
             saveState(); // Save state immediately
         }
         Logger.info(`✅ [AI分析] ${tabKey} 完成 (${filePath})`);
-        postMessage({ command: "tabComplete", tabKey, fileName: filePath, timestamp: Date.now() });
+        postMessage({ command: "tabComplete", status: cached.status, tabKey, fileName: filePath, timestamp: Date.now() });
         cleanupIfAllFinished(key, filePath);
     }).catch(err => {
         if (err.name !== "AbortError") {
@@ -193,7 +194,7 @@ export function cancelSingleTab(filePath: string, tabKey: string) {
     const cached = state.cache.get(key);
     if (cached) cached.status[tabKey] = 'interrupted';
 
-    postMessage({ command: "tabInterrupted", tabKey, fileName: filePath });
+    postMessage({ command: "tabInterrupted", status: cached!.status, tabKey, fileName: filePath });
 }
 
 export function cancelAllTasksForFile(filePath: string) {

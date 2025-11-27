@@ -1,30 +1,26 @@
-import * as vscode from 'vscode';
+export const Logger = {
+    info(message: string, ...args: any[]) {
+        const timestamp = new Date().toISOString();
+        console.log(`[INFO]  ${timestamp} | ${message}`, ...args);
+    },
 
-export class Logger {
-    private static _outputChannel: vscode.LogOutputChannel;
+    warn(message: string, ...args: any[]) {
+        const timestamp = new Date().toISOString();
+        console.warn(`[WARN]  ${timestamp} | ${message}`, ...args);
+    },
 
-    public static initialize(context: vscode.ExtensionContext) {
-        this._outputChannel = vscode.window.createOutputChannel('AI Code Analyzer', { log: true });
-        context.subscriptions.push(this._outputChannel);
-    }
+    error(message: string | Error, ...args: any[]) {
+        const timestamp = new Date().toISOString();
+        if (message instanceof Error) {
+            console.error(`[ERROR] ${timestamp} | ${message.message}`, message.stack, ...args);
+        } else {
+            console.error(`[ERROR] ${timestamp} | ${message}`, ...args);
+        }
+    },
 
-    public static info(message: string, ...args: any[]) {
-        this._outputChannel.info(message, ...args);
-    }
+    debug(message: string, ...args: any[]) {
+        const timestamp = new Date().toISOString();
+        console.log(`[DEBUG] ${timestamp} | ${message}`, ...args);
+    },
 
-    public static error(message: string | Error, ...args: any[]) {
-        this._outputChannel.error(message, ...args);
-    }
-
-    public static warn(message: string, ...args: any[]) {
-        this._outputChannel.warn(message, ...args);
-    }
-
-    public static debug(message: string, ...args: any[]) {
-        this._outputChannel.debug(message, ...args);
-    }
-
-    public static show() {
-        this._outputChannel.show();
-    }
-}
+};

@@ -36,6 +36,13 @@ export function updateCurrentFile(file: string) {
     state.currentFile = file;
 }
 
+export function getTabs() {
+    if (state.tabs.length > 0) return state.tabs;
+    const config = vscode.workspace.getConfiguration("aiAnalyze");
+    state.tabs = config.get<TabConfig[]>("tabs") || [];
+    return state.tabs;
+}
+
 export function updateTabs(tabs: TabConfig[]) {
     state.tabs = tabs;
 }

@@ -1,370 +1,548 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>AI 代码分析</title>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <style>
-    :root {
-      --btn-bg: var(--vscode-button-background);
-      --btn-fg: var(--vscode-button-foreground);
-      --btn-hover: var(--vscode-button-hoverBackground);
-    }
-    body{font-family:var(--vscode-font-family);margin:0;padding:0;height:100vh;
-         background:var(--vscode-editor-background);color:var(--vscode-editor-foreground);
-         display:flex;flex-direction:column;}
-    .toolbar{padding:10px;background:var(--vscode-titleBar-activeBackground);
-             border-bottom:1px solid var(--vscode-panel-border);
-             display:flex;align-items:center;gap:12px;}
-    #file-name{font-weight:bold;}
-    .btn{background:var(--btn-bg);color:var(--btn-fg);border:none;padding:6px 14px;
-         border-radius:4px;cursor:pointer;font-size:12px;}
-    .btn:hover{background:var(--btn-hover);}
-    .btn:disabled{opacity:0.6;cursor:not-allowed;}
-    .bubble-alert{position:absolute;right:100%;top:50%;transform:translateY(-50%);
-                  margin-right:12px;background:#333;border:1px solid #f1c40f;
-                  color:#fff;padding:5px 10px;border-radius:4px;font-size:12px;
-                  white-space:nowrap;display:none;z-index:10;}
-    .bubble-alert::after{content:'';position:absolute;top:50%;left:100%;
-                        transform:translateY(-50%);border:5px solid transparent;
-                        border-left-color:#f1c40f;}
-    .bubble-alert.visible{display:block;}
-
-    .tabs-container{display:flex;border-bottom:1px solid var(--vscode-panel-border);
-                    background:var(--vscode-sideBar-background);}
-    .tabs{display:flex;flex:1;overflow-x:auto;}
-    .tab{padding:0 16px;height:32px;display:flex;align-items:center;
-         cursor:pointer;user-select:none;white-space:nowrap;
-         border-right:1px solid var(--vscode-panel-border);}
-    .tab:hover{background:var(--vscode-list-hoverBackground);}
-    .tab.active{background:var(--vscode-editor-background);
-                border-bottom:2px solid var(--vscode-progressBar-background);font-weight:bold;}
-    .tab.inactive{opacity:0.6;cursor:default;}
-    .tab.inactive .tab-title{text-decoration:line-through;}
-    .tab-title{flex:1;overflow:hidden;text-overflow:ellipsis;margin-right:8px;}
-    .switch{position:relative;width:26px;height:16px;flex-shrink:0;}
-    .switch input{opacity:0;width:0;height:0;}
-    .slider{position:absolute;cursor:pointer;inset:0;background:#ccc;
-            border-radius:16px;transition:.3s;}
-    .slider:before{content:'';position:absolute;width:12px;height:12px;
-                   left:2px;bottom:2px;background:white;border-radius:50%;transition:.3s;}
-    input:checked + .slider{background:var(--btn-bg);}
-    input:checked + .slider:before{transform:translateX(10px);}
-
-    .content-area{flex:1;overflow:auto;padding:20px;}
-    .tab-content{display:none;}
-    .tab-content.active{display:block;}
-    .content-header{margin-bottom:16px;padding-bottom:8px;
-                    border-bottom:1px solid var(--vscode-panel-border);
-                    font-size:12px;color:var(--vscode-descriptionForeground);
-                    display:flex;align-items:center;gap:8px;}
-    .status-dot{width:8px;height:8px;border-radius:50%;}
-    .status-dot.generating{background:#f1c40f;box-shadow:0 0 6px #f1c40f;}
-    .status-dot.completed{background:#2ecc71;}
-    .status-dot.interrupted{background:#e74c3c;}
-    .action-link{cursor:pointer;color:var(--vscode-textLink-foreground);}
-    .action-link:hover{color:var(--vscode-textLink-activeForeground);}
-    .action-link.disabled{opacity:0.5;cursor:not-allowed;pointer-events:none;}
-    .loading{color:var(--vscode-descriptionForeground);font-style:italic;}
-  </style>
-</head>
-<body>
-  <div class="toolbar">
-    <strong id="file-name">无文件</strong>
-    <div style="flex:1"></div>
-    <div style="position:relative">
-      <div class="bubble-alert" id="stale-alert">文件已修改，可能已过期</div>
-      <button class="btn" id="regen-all-btn">重新生成</button>
-    </div>
-  </div>
-
-  <div class="tabs-container">
-    <div id="tabs-list" class="tabs"></div>
-  </div>
-
-  <div id="content-area" class="content-area">
-    <div style="text-align:center;padding-top:80px;color:var(--vscode-descriptionForeground);">
-      请选择一个文件开始 AI 分析
-    </div>
-  </div>
-
-  <script>
-    const vscode = acquireVsCodeApi();
-
-    let currentFile = "";
-    let contents   = {};
-    let statuses   = {};
-    let tabActive  = {};
-    let lastTimestamp = 0;
-
-    const $ = id => document.getElementById(id);
-    const q = sel => document.querySelector(sel);
-    const qa = sel => document.querySelectorAll(sel);
-
-    function setButtonLoading(btn, loading) {
-      if (loading) {
-        btn.disabled = true;
-        btn.dataset.oldText = btn.textContent;
-        btn.textContent = "请求中...";
-      } else {
-        btn.disabled = false;
-        btn.textContent = btn.dataset.oldText || "重新生成";
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>AI 代码分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      :root {
+        --btn-bg: var(--vscode-button-background);
+        --btn-fg: var(--vscode-button-foreground);
+        --btn-hover: var(--vscode-button-hoverBackground);
       }
-    }
+      body {
+        font-family: var(--vscode-font-family);
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        background: var(--vscode-editor-background);
+        color: var(--vscode-editor-foreground);
+        display: flex;
+        flex-direction: column;
+      }
+      .toolbar {
+        padding: 10px;
+        background: var(--vscode-titleBar-activeBackground);
+        border-bottom: 1px solid var(--vscode-panel-border);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      #file-name {
+        font-weight: bold;
+      }
+      .btn {
+        background: var(--btn-bg);
+        color: var(--btn-fg);
+        border: none;
+        padding: 6px 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .btn:hover {
+        background: var(--btn-hover);
+      }
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .bubble-alert {
+        position: absolute;
+        right: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        margin-right: 12px;
+        background: #333;
+        border: 1px solid #f1c40f;
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        display: none;
+        z-index: 10;
+      }
+      .bubble-alert::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 100%;
+        transform: translateY(-50%);
+        border: 5px solid transparent;
+        border-left-color: #f1c40f;
+      }
+      .bubble-alert.visible {
+        display: block;
+      }
 
-    let clickLock = false;
-    function throttledClick(fn) {
-      return (...args) => {
-        if (clickLock) return;
-        clickLock = true;
-        fn(...args);
-        setTimeout(() => clickLock = false, 500);
-      };
-    }
+      .tabs-container {
+        display: flex;
+        border-bottom: 1px solid var(--vscode-panel-border);
+        background: var(--vscode-sideBar-background);
+      }
+      .tabs {
+        display: flex;
+        flex: 1;
+        overflow-x: auto;
+      }
+      .tab {
+        padding: 0 16px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+        border-right: 1px solid var(--vscode-panel-border);
+      }
+      .tab:hover {
+        background: var(--vscode-list-hoverBackground);
+      }
+      .tab.active {
+        background: var(--vscode-editor-background);
+        border-bottom: 2px solid var(--vscode-progressBar-background);
+        font-weight: bold;
+      }
+      .tab.inactive {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .tab.inactive .tab-title {
+        text-decoration: line-through;
+      }
+      .tab-title {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-right: 8px;
+      }
+      .switch {
+        position: relative;
+        width: 26px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background: #ccc;
+        border-radius: 16px;
+        transition: 0.3s;
+      }
+      .slider:before {
+        content: "";
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        left: 2px;
+        bottom: 2px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.3s;
+      }
+      input:checked + .slider {
+        background: var(--btn-bg);
+      }
+      input:checked + .slider:before {
+        transform: translateX(10px);
+      }
 
-    const regenerateAll = throttledClick(() => {
-      const btn = $('regen-all-btn');
-      setButtonLoading(btn, true);
-      $('stale-alert').classList.remove('visible');
+      .content-area {
+        flex: 1;
+        overflow: auto;
+        padding: 20px;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .content-header {
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--vscode-panel-border);
+        font-size: 12px;
+        color: var(--vscode-descriptionForeground);
+        display: flex;
+        user-select: none;
+        align-items: center;
+        gap: 8px;
+      }
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .status-dot.generating {
+        background: #f1c40f;
+        box-shadow: 0 0 6px #f1c40f;
+      }
+      .status-dot.completed {
+        background: #2ecc71;
+      }
+      .status-dot.interrupted {
+        background: #e74c3c;
+      }
+      .action-link {
+        cursor: pointer;
+        color: var(--vscode-textLink-foreground);
+      }
+      .action-link:hover {
+        color: var(--vscode-textLink-activeForeground);
+      }
+      .action-link.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+      .loading {
+        color: var(--vscode-descriptionForeground);
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <strong id="file-name">无文件</strong>
+      <div style="flex: 1"></div>
+      <div style="position: relative">
+        <div class="bubble-alert" id="stale-alert">文件已修改，可能已过期</div>
+        <button class="btn" id="regen-all-btn">重新生成</button>
+      </div>
+    </div>
 
-      Object.keys(tabActive).forEach(key => {
-        if (tabActive[key]) {
-          contents[key] = '';
-          statuses[key] = 'generating';
-          const el = $(`content-${key}`);
-          if (el) el.innerHTML = '<p class="loading">重新生成中...</p>';
+    <div class="tabs-container">
+      <div id="tabs-list" class="tabs"></div>
+    </div>
+
+    <div id="content-area" class="content-area">
+      <div
+        style="
+          text-align: center;
+          padding-top: 80px;
+          color: var(--vscode-descriptionForeground);
+        "
+      >
+        请选择一个文件开始 AI 分析
+      </div>
+    </div>
+
+    <script>
+      const vscode = acquireVsCodeApi();
+
+      let currentFile = "";
+      let contents = {};
+      let statuses = {};
+      let tabActive = {};
+      let lastTimestamp = 0;
+
+      const $ = (id) => document.getElementById(id);
+      const q = (sel) => document.querySelector(sel);
+      const qa = (sel) => document.querySelectorAll(sel);
+
+      function setButtonLoading(btn, loading) {
+        if (loading) {
+          btn.disabled = true;
+          btn.dataset.oldText = btn.textContent;
+          btn.textContent = "请求中...";
+        } else {
+          btn.disabled = false;
+          btn.textContent = btn.dataset.oldText || "重新生成";
         }
+      }
+
+      let clickLock = false;
+      function throttledClick(fn) {
+        return (...args) => {
+          if (clickLock) return;
+          clickLock = true;
+          fn(...args);
+          setTimeout(() => (clickLock = false), 500);
+        };
+      }
+
+      const regenerateAll = throttledClick(() => {
+        const btn = $("regen-all-btn");
+        setButtonLoading(btn, true);
+        $("stale-alert").classList.remove("visible");
+
+        Object.keys(tabActive).forEach((key) => {
+          if (tabActive[key]) {
+            contents[key] = "";
+            statuses[key] = "generating";
+            const el = $(`content-${key}`);
+            if (el) el.innerHTML = '<p class="loading">重新生成中...</p>';
+          }
+        });
+        renderActiveHeader();
+        vscode.postMessage({ command: "regenerate" });
       });
-      renderActiveHeader();
-      vscode.postMessage({ command: 'regenerate' });
-    });
 
-    const regenerateSingle = throttledClick((key) => {
-      const btnInHeader = q(`#content-${key} .regen-link`);
-      if (btnInHeader) setButtonLoading(btnInHeader, true);
+      const regenerateSingle = throttledClick((key) => {
+        const btnInHeader = q(`#content-${key} .regen-link`);
+        if (btnInHeader) setButtonLoading(btnInHeader, true);
 
-      contents[key] = '';
-      statuses[key] = 'generating';
-      const el = $(`content-${key}`);
-      if (el) el.innerHTML = '<p class="loading">重新生成中...</p>';
-      renderActiveHeader();
+        contents[key] = "";
+        statuses[key] = "generating";
+        const el = $(`content-${key}`);
+        if (el) el.innerHTML = '<p class="loading">重新生成中...</p>';
+        renderActiveHeader();
 
-      vscode.postMessage({ command: 'requestAnalysis', tabKey: key });
-    });
+        vscode.postMessage({ command: "requestAnalysis", tabKey: key });
+      });
 
-    function createTabItem(tab, isFirstActive) {
-      const div = document.createElement('div');
-      div.className = `tab ${isFirstActive ? 'active' : ''} ${tab.disable ? 'inactive' : ''}`;
-      div.dataset.key = tab.key;
+      function createTabItem(tab, isFirstActive) {
+        const div = document.createElement("div");
+        div.className = `tab ${isFirstActive ? "active" : ""} ${
+          tab.disable ? "inactive" : ""
+        }`;
+        div.dataset.key = tab.key;
 
-      const title = document.createElement('span');
-      title.className = 'tab-title';
-      title.textContent = tab.title;
-      title.title = tab.title;
+        const title = document.createElement("span");
+        title.className = "tab-title";
+        title.textContent = tab.title;
+        title.title = tab.title;
 
-      const label = document.createElement('label');
-      label.className = 'switch';
-      const input = document.createElement('input');
-      input.type = 'checkbox';
-      input.checked = !tab.disable;
-      input.onchange = e => toggleTab(e, tab.key);
-      const slider = document.createElement('span');
-      slider.className = 'slider';
-      label.append(input, slider);
+        const label = document.createElement("label");
+        label.className = "switch";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = !tab.disable;
+        input.onchange = (e) => toggleTab(e, tab.key);
+        const slider = document.createElement("span");
+        slider.className = "slider";
+        label.append(input, slider);
 
-      div.append(title, label);
-      div.onclick = e => {
-        if (e.target.tagName !== 'INPUT' && !e.target.classList.contains('slider')) {
-          switchTab(tab.key);
+        div.append(title, label);
+        div.onclick = (e) => {
+          if (
+            e.target.tagName !== "INPUT" &&
+            !e.target.classList.contains("slider")
+          ) {
+            switchTab(tab.key);
+          }
+        };
+        return div;
+      }
+
+      function createContentDiv(tab, isActive) {
+        const div = document.createElement("div");
+        div.id = `content-${tab.key}`;
+        div.className = `tab-content ${isActive ? "active" : ""}`;
+        div.innerHTML = '<p class="loading">等待分析...</p>';
+        return div;
+      }
+
+      function switchTab(key) {
+        if (!tabActive[key]) return;
+        qa(".tab").forEach((t) => t.classList.remove("active"));
+        qa(".tab-content").forEach((c) => c.classList.remove("active"));
+        q(`[data-key="${key}"]`)?.classList.add("active");
+        $(`content-${key}`)?.classList.add("active");
+        renderActiveHeader();
+      }
+
+      function toggleTab(e, key) {
+        e.stopPropagation();
+        const checked = e.target.checked;
+        tabActive[key] = checked;
+        const tabEl = q(`[data-key="${key}"]`);
+        tabEl.classList.toggle("inactive", !checked);
+        vscode.postMessage({
+          command: "toggleDisable",
+          tabKey: key,
+          disable: !checked,
+        });
+        if (checked && !contents[key]) {
+          statuses[key] = "generating";
+          $(`content-${key}`).innerHTML = '<p class="loading">分析中...</p>';
+          renderActiveHeader();
+          vscode.postMessage({ command: "requestAnalysis", tabKey: key });
+        } else if (!checked && statuses[key] === "generating") {
+          statuses[key] = "interrupted";
+          renderActiveHeader();
+          vscode.postMessage({ command: "cancelRequest", tabKey: key });
         }
-      };
-      return div;
-    }
-
-    function createContentDiv(tab, isActive) {
-      const div = document.createElement('div');
-      div.id = `content-${tab.key}`;
-      div.className = `tab-content ${isActive ? 'active' : ''}`;
-      div.innerHTML = '<p class="loading">等待分析...</p>';
-      return div;
-    }
-
-    function switchTab(key) {
-      if (!tabActive[key]) return;
-      qa('.tab').forEach(t => t.classList.remove('active'));
-      qa('.tab-content').forEach(c => c.classList.remove('active'));
-      q(`[data-key="${key}"]`)?.classList.add('active');
-      $(`content-${key}`)?.classList.add('active');
-      renderActiveHeader();
-    }
-
-    function toggleTab(e, key) {
-      e.stopPropagation();
-      const checked = e.target.checked;
-      tabActive[key] = checked;
-      const tabEl = q(`[data-key="${key}"]`);
-      tabEl.classList.toggle('inactive', !checked);
-
-      if (checked && !contents[key]) {
-        statuses[key] = 'generating';
-        $(`content-${key}`).innerHTML = '<p class="loading">分析中...</p>';
-        renderActiveHeader();
-        vscode.postMessage({ command: 'requestAnalysis', tabKey: key });
-      } else if (!checked && statuses[key] === 'generating') {
-        statuses[key] = 'interrupted';
-        renderActiveHeader();
-        vscode.postMessage({ command: 'cancelRequest', tabKey: key });
-      }
-    }
-
-    function renderActiveHeader() {
-      const activeTabEl = q('.tab.active');
-      if (!activeTabEl) return;
-      const key = activeTabEl.dataset.key;
-      const contentDiv = $(`content-${key}`);
-      if (!contentDiv) return;
-
-      let header = contentDiv.querySelector('.content-header');
-      if (!header) {
-        header = document.createElement('div');
-        header.className = 'content-header';
-        contentDiv.prepend(header);
       }
 
-      const status = statuses[key] || 'generating';
-      const isGen = status === 'generating';
+      function renderActiveHeader() {
+        const activeTabEl = q(".tab.active");
+        if (!activeTabEl) return;
+        const key = activeTabEl.dataset.key;
+        const contentDiv = $(`content-${key}`);
+        if (!contentDiv) return;
 
-      const statusInfo = {
-        generating: ['generating', '生成中...'],
-        completed : ['completed',  '已完成'],
-        interrupted: ['interrupted','已中断']
-      }[status];
+        let header = contentDiv.querySelector(".content-header");
+        if (!header) {
+          header = document.createElement("div");
+          header.className = "content-header";
+          contentDiv.prepend(header);
+        }
 
-      header.innerHTML = `
+        const status = statuses?.[key] || "generating";
+        const isGen = status === "generating";
+
+        const statusInfo = {
+          generating: ["generating", "生成中..."],
+          completed: ["completed", "已完成"],
+          interrupted: ["interrupted", "已中断"],
+        }[status] || ["generating", "生成中...", "#f1c40f"];
+
+        header.innerHTML = `
         <span class="status-dot ${statusInfo[0]}"></span>
         <span>${statusInfo[1]}</span>
         <span>${new Date(lastTimestamp || Date.now()).toLocaleString()}</span>
         <span style="flex:1"></span>
-        <span class="action-link ${isGen?'disabled':''}"
+        <span class="action-link ${isGen ? "disabled" : ""}"
               onclick="navigator.clipboard.writeText(contents['${key}']||'')">
-          ${isGen ? '生成中...' : '复制结果'}
+          ${isGen ? "生成中..." : "复制结果"}
         </span>
         <span> | </span>
-        <span class="action-link regen-link ${isGen?'disabled':''}"
+        <span class="action-link regen-link ${isGen ? "disabled" : ""}"
               data-normal-text="重新生成"
               onclick="regenerateSingle('${key}')">
           重新生成
         </span>
       `;
 
-      const regenLink = header.querySelector('.regen-link');
-      if (regenLink && !isGen) setButtonLoading(regenLink, false);
-    }
-
-    window.addEventListener('message', e => {
-      const m = e.data;
-      switch (m.command) {
-
-        case 'initTabs':
-          currentFile = m.fileName;
-          $('file-name').textContent = m.relativePath || m.fileName;
-          $('tabs-list').innerHTML = '';
-          $('content-area').innerHTML = '';
-
-          // Find first non-disabled tab for active
-          let firstActiveIndex = m.tabs.findIndex(t => !t.disable);
-          if (firstActiveIndex === -1) firstActiveIndex = 0;
-
-          m.tabs.forEach((tab, i) => {
-            tabActive[tab.key] = !tab.disable;
-            statuses[tab.key] = 'generating';
-            contents[tab.key] = '';
-
-            const isFirstActive = (i === firstActiveIndex);
-            $('tabs-list').appendChild(createTabItem(tab, isFirstActive));
-            $('content-area').appendChild(createContentDiv(tab, isFirstActive));
-          });
-
-          console.log('needRequestArray', m.needRequestArray, m.tabs, m.fileName);
-          // Request analysis for tabs in needRequestArray
-          (m.needRequestArray || []).forEach(key => {
-            vscode.postMessage({ command: 'requestAnalysis', tabKey: key });
-          });
-
-          setButtonLoading($('regen-all-btn'), false);
-          break;
-
-        case 'chunk':
-          if (m.fileName !== currentFile) return;
-          contents[m.tabKey] = m.fullText;
-          const el = $(`content-${m.tabKey}`);
-          if (el) {
-            const header = el.querySelector('.content-header');
-            el.innerHTML = marked.parse(m.fullText || '');
-            if (header) el.prepend(header);
-            if (q('.tab.active')?.dataset.key === m.tabKey) renderActiveHeader();
-          }
-          break;
-
-        case 'tabComplete':
-          statuses[m.tabKey] = 'completed';
-          lastTimestamp = m.timestamp || Date.now();
-          renderActiveHeader();
-          break;
-
-        case 'tabInterrupted':
-          statuses[m.tabKey] = 'interrupted';
-          renderActiveHeader();
-          break;
-
-        case 'loadFile':
-          currentFile = m.fileName;
-          $('file-name').textContent = m.relativePath || m.fileName;
-          lastTimestamp = m.timestamp || Date.now();
-          if (m.isStale) $('stale-alert').classList.add('visible');
-          else $('stale-alert').classList.remove('visible');
-
-          Object.entries(m.data || {}).forEach(([k, v]) => {
-            contents[k] = v || '';
-            statuses[k] = m.status?.[k] || 'completed';
-            const el = $(`content-${k}`);
-            if (el) {
-              el.innerHTML = marked.parse(v || '');
-              renderActiveHeader();
-            }
-          });
-          setButtonLoading($('regen-all-btn'), false);
-          break;
-
-        case 'analysisDone':
-          lastTimestamp = m.timestamp || Date.now();
-          renderActiveHeader();
-          setButtonLoading($('regen-all-btn'), false);
-          break;
-
-        case 'showStaleAlert':
-          $('stale-alert').classList.toggle('visible', !!m.isStale);
-          break;
-
-        case 'reset':
-          currentFile = m.fileName;
-          $('file-name').textContent = m.relativePath || m.fileName;
-          $('stale-alert').classList.remove('visible');
-          $('tabs-list').innerHTML = '';
-          $('content-area').innerHTML = '<p class="loading">准备分析...</p>';
-          contents = {}; statuses = {}; tabActive = {};
-          break;
-
-        case 'noFile':
-          $('file-name').textContent = '无文件';
-          $('tabs-list').innerHTML = '';
-          $('content-area').innerHTML = '<div style="text-align:center;padding-top:80px;color:var(--vscode-descriptionForeground);">请选择一个文件开始 AI 分析</div>';
-          break;
+        const regenLink = header.querySelector(".regen-link");
+        if (regenLink && !isGen) setButtonLoading(regenLink, false);
       }
-    });
 
-    $('regen-all-btn').onclick = regenerateAll;
-  </script>
-</body>
+      function updateStatuses(m) {
+        Object.entries(m.status || {}).forEach(([k, v]) => {
+          statuses[k] = v;
+        });
+      }
+
+      function setTabActive(m) {
+        if (!m?.tabs) return;
+        m.tabs.forEach((tab) => {
+          tabActive[tab.key] = !tab.disable;
+        });
+      }
+
+      window.addEventListener("message", (e) => {
+        const m = e.data;
+        switch (m.command) {
+          case "initTabs":
+            currentFile = m.fileName;
+            $("file-name").textContent = m.relativePath || m.fileName;
+            $("tabs-list").innerHTML = "";
+            $("content-area").innerHTML = "";
+
+            // Find first non-disabled tab for active
+            let firstActiveIndex = m.tabs.findIndex((t) => !t.disable);
+            if (firstActiveIndex === -1) firstActiveIndex = 0;
+
+            updateStatuses(m);
+            setTabActive(m);
+            m.tabs.forEach((tab, i) => {
+              tabActive[tab.key] = !tab.disable;
+              contents[tab.key] = "";
+
+              const isFirstActive = i === firstActiveIndex;
+              $("tabs-list").appendChild(createTabItem(tab, isFirstActive));
+              $("content-area").appendChild(
+                createContentDiv(tab, isFirstActive)
+              );
+            });
+
+            // Request analysis for tabs in needRequestArray
+            (m.needRequestArray || []).forEach((key) => {
+              vscode.postMessage({ command: "requestAnalysis", tabKey: key });
+            });
+            renderActiveHeader();
+            setButtonLoading($("regen-all-btn"), false);
+            break;
+
+          case "chunk":
+            if (m.fileName !== currentFile) return;
+            contents[m.tabKey] = m.fullText;
+            const el = $(`content-${m.tabKey}`);
+            if (el) {
+              const header = el.querySelector(".content-header");
+              el.innerHTML = marked.parse(m.fullText || "");
+              if (header) el.prepend(header);
+              updateStatuses(m);
+              if (q(".tab.active")?.dataset.key === m.tabKey)
+                renderActiveHeader();
+            }
+            break;
+
+          case "tabComplete":
+            updateStatuses(m);
+            lastTimestamp = m.timestamp || Date.now();
+            renderActiveHeader();
+            break;
+
+          case "tabInterrupted":
+            updateStatuses(m);
+            renderActiveHeader();
+            break;
+
+          case "loadFile":
+            currentFile = m.fileName;
+            $("file-name").textContent = m.relativePath || m.fileName;
+            lastTimestamp = m.timestamp || Date.now();
+            if (m.isStale) $("stale-alert").classList.add("visible");
+            else $("stale-alert").classList.remove("visible");
+
+            updateStatuses(m);
+            setTabActive(m);
+            Object.entries(m.data || {}).forEach(([k, v]) => {
+              contents[k] = v || "";
+              const el = $(`content-${k}`);
+              if (el) {
+                el.innerHTML = marked.parse(v || "");
+                renderActiveHeader();
+              }
+            });
+            setButtonLoading($("regen-all-btn"), false);
+            break;
+
+          case "analysisDone":
+            lastTimestamp = m.timestamp || Date.now();
+            setTabActive(m);
+            renderActiveHeader();
+            setButtonLoading($("regen-all-btn"), false);
+            break;
+
+          case "showStaleAlert":
+            $("stale-alert").classList.toggle("visible", !!m.isStale);
+            break;
+
+          case "reset":
+            setTabActive(m);
+            currentFile = m.fileName;
+            $("file-name").textContent = m.relativePath || m.fileName;
+            $("stale-alert").classList.remove("visible");
+            $("tabs-list").innerHTML = "";
+            $("content-area").innerHTML = '<p class="loading">准备分析...</p>';
+            contents = {};
+            statuses = {};
+            tabActive = {};
+            break;
+
+          case "noFile":
+            $("file-name").textContent = "无文件";
+            $("tabs-list").innerHTML = "";
+            $("content-area").innerHTML =
+              '<div style="text-align:center;padding-top:80px;color:var(--vscode-descriptionForeground);">请选择一个文件开始 AI 分析</div>';
+            break;
+        }
+      });
+
+      $("regen-all-btn").onclick = regenerateAll;
+    </script>
+  </body>
 </html>
