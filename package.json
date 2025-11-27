@@ -33,7 +33,7 @@
       ]
     },
     "configuration": {
-      "title": "AI Code Analyzer",
+      "title": "AI Code Analyzer Panel",
       "properties": {
         "aiAnalyze.apiKey": {
           "type": "string",
@@ -49,6 +49,11 @@
           "type": "string",
           "default": "gpt-4o-mini",
           "description": "Model name"
+        },
+        "aiAnalyze.maxParallelRequests": {
+          "type": "number",
+          "default": 30,
+          "description": "Maximum number of parallel AI requests"
         },
         "aiAnalyze.tabs": {
           "type": "array",

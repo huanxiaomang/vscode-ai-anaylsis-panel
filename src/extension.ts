@@ -27,6 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
     // 文件保存后 → 仅显示「内容已过期」提示（不自动重新分析）
     context.subscriptions.push(
         vscode.workspace.onDidSaveTextDocument((doc) => {
+            console.log(doc)
             if (AIAnalysisPanel.currentPanel && doc.fileName === AIAnalysisPanel.currentPanel['_currentFile']) {
                 AIAnalysisPanel.currentPanel.showStaleAlert(doc.fileName);
             }
