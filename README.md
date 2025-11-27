@@ -113,8 +113,7 @@ API 服务地址，默认为 OpenAI，也可使用其他兼容服务
 {
   "aiAnalyze.model": "moonshotai/Kimi-K2-Instruct",
   "aiAnalyze.apiEndpoint": "https://api.siliconflow.cn/v1/chat/completions",
-  "aiAnalyze.apiKey": "你的apiKey",
-  "aiAnalyze.debounceTime": 1
+  "aiAnalyze.apiKey": "你的apiKey"
 }
 ```
 

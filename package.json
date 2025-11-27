@@ -2,7 +2,7 @@
   "name": "hxm-ai-analyzer-panel",
   "displayName": "AI Code Analyzer Panel",
   "description": "Real-time customizable AI code analysis",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "huanxiaomang",
   "engines": {
     "vscode": "^1.80.0"
@@ -82,6 +82,11 @@
               "key": "mianshi",
               "title": "面试考点",
               "prompt": "生成这些代码包含的知识点和实现手段，分析对应的面试题，先写出对应考点，然后再提出对应面试问题，要全面深入考察${fileName} ${codeContent}"
+            },
+            {
+              "key": "fuckshit",
+              "title": "屎山检测",
+              "prompt": "你是一位极其挑剔但又极具建设性的资深程序员，有的项目代码可能经过了长久的、多人包括AI参与的大量长期迭代，其内部状态流转逻辑、函数封装可能混乱不堪、完全不统一，这种项目再迭代可能出错的概率会大大增加。你致力于分析代码整体，找到整体上的可重构、可统一的点，详细提出对应的优化建议，需要写代码时要输出必要的示例代码${fileName} ${codeContent}"
             }
           ],
           "description": "自定义分析维度，支持任意数量",
