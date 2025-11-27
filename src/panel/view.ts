@@ -71,6 +71,12 @@ async function update(panel: vscode.WebviewPanel) {
 
 export function registerMessageListener(callback: (message: any) => void) {
     if (currentPanel) {
-        currentPanel.webview.onDidReceiveMessage(callback, null, _disposables);
+        // Clear existing listeners first
+        _disposables.forEach(d => d.dispose());
+        _disposables = [];
+        // Register new listener
+        _disposables.push(
+            currentPanel.webview.onDidReceiveMessage(callback)
+        );
     }
 }

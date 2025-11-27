@@ -2,7 +2,7 @@ export interface TabConfig {
     key: string;
     title: string;
     prompt: string;
-    active?: boolean;
+    disable?: boolean;
 }
 
 export interface AnalysisResult {

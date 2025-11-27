@@ -69,12 +69,16 @@ export function switchFile(filePath: string) {
     updateTabs(tabs);
 
     if (cached) {
+        // Calculate which tabs need to be requested (none, since we have cache)
+        const needRequestArray: string[] = [];
+
         // Send tabs first, then load cached data
         postMessage({
             command: "initTabs",
             fileName: filePath,
             relativePath: vscode.workspace.asRelativePath(filePath),
-            tabs: tabs.map(t => ({ key: t.key, title: t.title, active: t.active !== false }))
+            tabs: tabs.map(t => ({ key: t.key, title: t.title, disable: t.disable === true })),
+            needRequestArray
         });
         sendLoadFileMessage(filePath, cached);
         return;
@@ -158,11 +162,17 @@ async function analyzeCurrentFile(forceRegenerate: boolean, explicitFilePath?: s
     state.cache.set(key, newResult);
     saveState(); // Save initial state
 
+    // Calculate which tabs need to be requested
+    const needRequestArray = tabs
+        .filter(t => !t.disable)
+        .map(t => t.key);
+
     postMessage({
         command: "initTabs",
         fileName: filePath,
         relativePath: vscode.workspace.asRelativePath(filePath),
-        tabs: tabs.map(t => ({ key: t.key, title: t.title, active: t.active !== false }))
+        tabs: tabs.map(t => ({ key: t.key, title: t.title, disable: t.disable === true })),
+        needRequestArray
     });
 }
 
