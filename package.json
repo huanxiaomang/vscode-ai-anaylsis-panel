@@ -2,7 +2,7 @@
   "name": "hxm-ai-analyzer-panel",
   "displayName": "AI Code Analyzer Panel",
   "description": "Real-time customizable AI code analysis",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "huanxiaomang",
   "engines": {
     "vscode": "^1.80.0"
@@ -117,12 +117,14 @@
     }
   },
   "scripts": {
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "build": "tsdown",
+    "watch": "tsdown --watch",
+    "publish": "vsce publish"
   },
   "devDependencies": {
-    "@types/vscode": "^1.80.0",
     "@types/node": "18.x",
+    "@types/vscode": "^1.80.0",
+    "tsdown": "^0.16.8",
     "typescript": "^5.1.3"
   }
 }
