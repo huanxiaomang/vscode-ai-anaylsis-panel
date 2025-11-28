@@ -122,7 +122,7 @@
     }
   },
   "scripts": {
-    "build": "tsdown",
+    "compile": "tsdown",
     "watch": "tsdown --watch"
   },
   "devDependencies": {
