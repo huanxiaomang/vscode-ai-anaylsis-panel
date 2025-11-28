@@ -343,7 +343,6 @@
       }
 
       function switchTab(key) {
-        if (!tabActive[key]) return;
         qa(".tab").forEach((t) => t.classList.remove("active"));
         qa(".tab-content").forEach((c) => c.classList.remove("active"));
         q(`[data-key="${key}"]`)?.classList.add("active");
