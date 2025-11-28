@@ -1,13 +1,18 @@
 {
   "name": "hxm-ai-analyzer-panel",
-  "displayName": "AI Code Analyzer Panel",
-  "description": "Real-time customizable AI code analysis",
-  "version": "0.0.3",
+  "displayName": "Code Insight Panel",
+  "description": "Real-time customizable AI code analysis panel",
+  "version": "0.0.4",
   "publisher": "huanxiaomang",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.80.0"
   },
-  "repository": "https://github.com/huanxiaomang/vscode-ai-anaylsis-panel",
+  "icon": "res/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/huanxiaomang/vscode-ai-anaylsis-panel"
+  },
   "categories": [
     "Other"
   ],
@@ -118,8 +123,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "watch": "tsdown --watch",
-    "publish": "vsce publish"
+    "watch": "tsdown --watch"
   },
   "devDependencies": {
     "@types/node": "18.x",
