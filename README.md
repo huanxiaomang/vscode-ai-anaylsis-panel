@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🤖 AI Code Analyzer Panel
+# 🤖 Code Insight Panel
 
 **为你的代码提供实时 AI 分析的 VS Code 扩展**
 
@@ -10,8 +10,6 @@
 [![License](https://img.shields.io/github/license/huanxiaomang/vscode-ai-anaylsis-panel?style=flat-square&color=orange)](https://github.com/huanxiaomang/vscode-ai-anaylsis-panel/blob/main/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/huanxiaomang/vscode-ai-anaylsis-panel?style=flat-square&logo=github&color=red)](https://github.com/huanxiaomang/vscode-ai-anaylsis-panel)
 
-[English](README.md) | [简体中文](README.zh-CN.md)
-
 </div>
 
 ---
@@ -20,9 +18,9 @@
 
 ## 📖 简介
 
-AI Code Analyzer Panel 是一个强大的 VS Code 扩展，通过可自定义的多维度分析视图，为你的代码提供实时 AI 分析。帮助你更好地理解代码结构、发现潜在问题并获得优化建议。
+Code Insight Panel 是一个强大的 VS Code 扩展，通过可自定义的多维度分析视图，为你的代码提供实时 AI 分析。帮助你更好地理解代码结构、发现潜在问题并获得优化建议。
 
-实习过的肯定都知道，自己一个人看组内项目都很复杂很难懂，文件很多每次看一个文件都问一次 ai 不现实，这个插件正是解决这个问题，在看大型复杂项目快速浏览多个文件时，主动提高效率。
+实习过的肯定都知道，自己一个人看组内项目都很复杂很难懂，文件很多每次看一个文件都问一次 AI 不现实，这个插件正是解决这个问题，在看大型复杂项目快速浏览多个文件时，主动提高效率。
 
 ### ✨ 核心特性
 
@@ -35,15 +33,37 @@ AI Code Analyzer Panel 是一个强大的 VS Code 扩展，通过可自定义的
 - **自动启动**: IDE 启动时自动打开分析面板
 - **实时同步**: 切换文件时自动跟随更新
 - **流式输出**: 实时显示 AI 分析结果
+- **智能缓存**: 分析结果持久化存储
 
 </td>
 <td width="50%">
 
-#### 🎯 高度可配置
+#### � 优雅呈现
+
+- **Shiki 语法高亮**: 代码块使用专业的语法着色
+- **主题自适应**: 自动跟随 VS Code 明暗主题切换
+- **Markdown 渲染**: 美观的 GitHub 风格 Markdown 显示
+- **响应式设计**: 流畅的交互体验
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+#### �🎯 高度可配置
 
 - **多维度分析**: 自定义分析维度（概览、实现、优化等）
 - **灵活配置**: 支持自定义 API、模型和提示词
-- **智能缓存**: 分析结果持久化存储
+- **并发控制**: 可配置最大并行请求数
+
+</td>
+<td width="50%">
+
+#### ⚡ 性能优化
+
+- **按需加载**: 仅在需要时启动 AI 分析
+- **Tree Shaking**: 生产构建自动移除日志代码
+- **轻量打包**: 优化后的扩展体积小于 8KB
 
 </td>
 </tr>
@@ -51,33 +71,45 @@ AI Code Analyzer Panel 是一个强大的 VS Code 扩展，通过可自定义的
 
 ---
 
-## 功能展示
+## 🎬 功能展示
+
+### v0.0.6 新特性
+
+- ✨ **Shiki 语法高亮**: 代码块现在具有专业级的语法着色，支持多种编程语言
+- 🌗 **主题实时切换**: 当你切换 VS Code 主题时，代码高亮会自动更新以匹配新主题
+- 🎨 **优化 Markdown 渲染**: 使用 GitHub 风格的样式，更加美观易读
+- 🐛 **修复面板销毁问题**: 解决了关闭后无法重新打开的 Bug
+- 🔧 **改进右键菜单**: 现在仅在文件上显示启动选项，不再在文件夹上显示
 
 ### 主要功能
 
 - 🔄 **实时同步**: 切换文件时，分析面板自动跟随更新
 - 💾 **智能缓存**: 分析结果持久化存储，重启 IDE 后无需重新分析
 - 📝 **多维度分析**: 支持自定义多个分析维度（概览、实现细节、优化建议等）
-- 🎯 **右键快捷**: 文件树中右键即可启动 AI 分析
+- 🎯 **右键快捷**: 文件树中右键文件即可启动 AI 分析
 - ⚡ **流式输出**: 实时显示 AI 分析结果，无需等待
 - 🔧 **高度可配置**: 支持自定义 API、模型和分析提示词
 
 ---
 
-## 快速开始
+## 🚀 快速开始
 
 ### 安装
 
 1. 打开 VS Code
 2. 按 `Ctrl+Shift+X` 打开扩展面板
-3. 搜索 `AI Code Analyzer Panel`
+3. 搜索 `Code Insight Panel`
 4. 点击 **安装**
 
 ## ⚙️ 配置指南
 
+我是婴儿，看不懂下面一大堆文字教程怎么办？
+
+[婴儿图文教程](docs/babyREADME.md)
+
 ### 必需配置
 
-在使用前，需要配置 AI 服务相关参数。打开 VS Code 设置（`Ctrl+,`），搜索 `AI Code Analyzer`：
+在使用前，需要配置 AI 服务相关参数。打开 VS Code 设置（`Ctrl+,`），搜索 `Code Insight Panel`：
 
 #### 1. API Key (`codeInsightPanel.apiKey`)
 
@@ -117,6 +149,16 @@ API 服务地址，默认为 OpenAI，也可使用其他兼容服务
 }
 ```
 
+### 可选配置
+
+#### 并发控制 (`codeInsightPanel.maxParallelRequests`)
+
+设置最大并行 AI 请求数，默认为 30
+
+```json
+"codeInsightPanel.maxParallelRequests": 30
+```
+
 ### 自定义分析维度
 
 扩展默认提供三个分析维度，你可以在设置中自定义 `codeInsightPanel.tabs`：
@@ -127,17 +169,20 @@ API 服务地址，默认为 OpenAI，也可使用其他兼容服务
     {
       "key": "summary",
       "title": "内容概览",
-      "prompt": "分析这个文件的整体功能..."
+      "prompt": "请分析文件 ${fileName}，提供简洁的功能概述...",
+      "disable": false
     },
     {
       "key": "implementation",
       "title": "核心实现",
-      "prompt": "详细说明这个文件的实现细节..."
+      "prompt": "详细说明文件 ${fileName} 的核心实现逻辑...",
+      "disable": false
     },
     {
       "key": "optimization",
       "title": "优化建议",
-      "prompt": "提供代码优化建议..."
+      "prompt": "针对文件 ${fileName}，提供具体的代码优化建议...",
+      "disable": false
     }
   ]
 }
@@ -146,6 +191,13 @@ API 服务地址，默认为 OpenAI，也可使用其他兼容服务
 数组的每一项分别对应一个 tab：
 
 ![Tabs](images/tabs.png)
+
+#### Tab 配置项说明
+
+- `key`: Tab 的唯一标识符
+- `title`: Tab 显示的标题
+- `prompt`: AI 分析时使用的提示词
+- `disable`: 是否默认禁用该 Tab（可在界面上切换）
 
 #### 提示词变量
 
@@ -156,26 +208,20 @@ API 服务地址，默认为 OpenAI，也可使用其他兼容服务
 
 ---
 
-#### 推荐 prompt
-
-待添加
-
 ## 📚 使用教程
 
 ### 方式一：右键菜单
 
 1. 在文件资源管理器中找到要分析的文件
-2. 右键点击文件
+2. 右键点击文件（**仅支持文件，不支持文件夹**）
 3. 选择 **"启动 AI 分析视图"**
 4. 分析面板打开并开始分析该文件
 
 ### 方式二：命令面板
 
 1. 按 `Ctrl+Shift+P`（Mac: `Cmd+Shift+P`）打开命令面板
-2. 输入 `启动AI分析视图`
+2. 输入 `open Code Insight Panel`
 3. 回车执行
-
----
 
 <div align="center">
 
