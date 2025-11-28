@@ -78,7 +78,7 @@ export async function runSingleTabAnalysis(filePath: string, tabKey: string) {
     const tabConfig = state.tabs.find(t => t.key === tabKey);
     if (!tabConfig) return;
 
-    const config = vscode.workspace.getConfiguration("aiAnalyze");
+    const config = vscode.workspace.getConfiguration("codeInsightPanel");
     const apiKey = config.get<string>("apiKey");
     const apiEndpoint = config.get<string>("apiEndpoint");
     const model = config.get<string>("model");

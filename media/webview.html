@@ -209,6 +209,115 @@
         font-style: italic;
       }
     </style>
+    <style>
+      /* Markdown Styles */
+      .markdown-body {
+        font-family: var(--vscode-font-family);
+        font-size: var(--vscode-font-size);
+        line-height: 1.6;
+      }
+      .markdown-body h1,
+      .markdown-body h2,
+      .markdown-body h3 {
+        margin-top: 24px;
+        margin-bottom: 16px;
+        font-weight: 600;
+        line-height: 1.25;
+        border-bottom: 1px solid var(--vscode-panel-border);
+        padding-bottom: 0.3em;
+      }
+      .markdown-body h1 {
+        font-size: 2em;
+      }
+      .markdown-body h2 {
+        font-size: 1.5em;
+      }
+      .markdown-body h3 {
+        font-size: 1.25em;
+        border-bottom: none;
+      }
+      .markdown-body p {
+        margin-bottom: 16px;
+      }
+      .markdown-body code {
+        font-family: var(--vscode-editor-font-family);
+        font-size: 100%;
+        background-color: var(--vscode-textCodeBlock-background);
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+      }
+      .markdown-body pre {
+        padding: 16px;
+        overflow: auto;
+        font-size: 100%;
+        line-height: 1.45;
+        background-color: var(--vscode-textCodeBlock-background);
+        border-radius: 3px;
+        margin-bottom: 16px;
+      }
+      .markdown-body pre code {
+        background-color: transparent;
+        padding: 0;
+      }
+      /* Shiki Overrides */
+      .markdown-body pre.shiki {
+        background-color: var(--vscode-textCodeBlock-background) !important;
+        padding: 16px;
+        overflow: auto;
+        border-radius: 3px;
+        margin-bottom: 16px;
+      }
+      .markdown-body pre.shiki code {
+        background-color: transparent;
+        padding: 0;
+        font-family: var(--vscode-editor-font-family);
+      }
+
+      .markdown-body blockquote {
+        margin: 0 0 16px;
+        padding: 0 1em;
+        color: var(--vscode-descriptionForeground);
+        border-left: 0.25em solid var(--vscode-textBlockQuote-border);
+      }
+      .markdown-body ul,
+      .markdown-body ol {
+        padding-left: 2em;
+        margin-bottom: 16px;
+      }
+      .markdown-body table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-bottom: 16px;
+      }
+      .markdown-body table th,
+      .markdown-body table td {
+        padding: 6px 13px;
+        border: 1px solid var(--vscode-panel-border);
+      }
+      .markdown-body table tr:nth-child(2n) {
+        background-color: var(--vscode-keybindingTable-rowsBackground);
+      }
+      .markdown-body a {
+        color: var(--vscode-textLink-foreground);
+        text-decoration: none;
+      }
+      .markdown-body a:hover {
+        text-decoration: underline;
+        color: var(--vscode-textLink-activeForeground);
+      }
+      .markdown-body img {
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      .markdown-body hr {
+        height: 0.1em;
+        padding: 0;
+        margin: 24px 0;
+        background-color: var(--vscode-activityBarTop-dropBorder);
+        opacity: 0.2;
+        border: 0;
+      }
+    </style>
   </head>
   <body>
     <div class="toolbar">
@@ -235,6 +344,44 @@
         请选择一个文件开始 AI 分析
       </div>
     </div>
+
+    <script type="module">
+      import { createHighlighter } from "https://esm.sh/shiki@1.24.0";
+
+      window.shikiHighlighter = null;
+      window.isShikiReady = false;
+
+      (async () => {
+        try {
+          window.shikiHighlighter = await createHighlighter({
+            themes: ["github-dark", "github-light"],
+            langs: [
+              "javascript",
+              "typescript",
+              "html",
+              "css",
+              "json",
+              "bash",
+              "python",
+              "java",
+              "go",
+              "rust",
+              "cpp",
+              "c",
+              "csharp",
+              "yaml",
+              "xml",
+            ],
+          });
+          window.isShikiReady = true;
+          console.log("Shiki loaded");
+          // Re-highlight any existing content
+          if (window.highlightAll) window.highlightAll();
+        } catch (e) {
+          console.error("Failed to load Shiki:", e);
+        }
+      })();
+    </script>
 
     <script>
       const vscode = acquireVsCodeApi();
@@ -337,7 +484,7 @@
       function createContentDiv(tab, isActive) {
         const div = document.createElement("div");
         div.id = `content-${tab.key}`;
-        div.className = `tab-content ${isActive ? "active" : ""}`;
+        div.className = `tab-content markdown-body ${isActive ? "active" : ""}`;
         div.innerHTML = '<p class="loading">等待分析...</p>';
         return div;
       }
@@ -423,6 +570,82 @@
         });
       }
 
+      function getTheme() {
+        const body = document.body;
+        if (body.classList.contains("vscode-light")) return "github-light";
+        if (body.classList.contains("vscode-high-contrast-light"))
+          return "github-light";
+        return "github-dark";
+      }
+
+      function highlightAll() {
+        if (!window.shikiHighlighter || !window.isShikiReady) return;
+
+        const theme = getTheme();
+        const codes = document.querySelectorAll(".markdown-body pre code");
+
+        codes.forEach((code) => {
+          const pre = code.parentElement;
+
+          // Check if already highlighted with the same theme
+          if (pre.dataset.highlightedTheme === theme) {
+            return; // Skip, already highlighted with current theme
+          }
+
+          // Get original code text
+          let text;
+          if (pre.dataset.originalCode) {
+            // Use saved original code
+            text = pre.dataset.originalCode;
+          } else {
+            // First time highlighting, save the original code
+            text = code.textContent;
+            pre.dataset.originalCode = text;
+          }
+
+          // Get language
+          let lang;
+          if (pre.dataset.originalLang) {
+            lang = pre.dataset.originalLang;
+          } else {
+            const langClass = Array.from(code.classList).find((c) =>
+              c.startsWith("language-")
+            );
+            lang = langClass ? langClass.replace("language-", "") : "text";
+            pre.dataset.originalLang = lang;
+          }
+
+          try {
+            const html = window.shikiHighlighter.codeToHtml(text, {
+              lang: lang,
+              theme: theme,
+            });
+
+            // Shiki returns a pre element. We replace the existing pre.
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = html;
+            const newPre = tempDiv.firstElementChild;
+
+            if (newPre) {
+              // Preserve the data attributes
+              newPre.dataset.originalCode = text;
+              newPre.dataset.originalLang = lang;
+              newPre.dataset.highlightedTheme = theme;
+              pre.replaceWith(newPre);
+            }
+          } catch (e) {
+            // Fallback or error (e.g. lang not loaded)
+            // console.warn('Shiki highlight error:', e);
+          }
+        });
+      }
+      window.highlightAll = highlightAll;
+
+      function renderMarkdown(element, text) {
+        element.innerHTML = marked.parse(text || "");
+        highlightAll();
+      }
+
       function setTabActive(m) {
         if (!m?.tabs) return;
         m.tabs.forEach((tab) => {
@@ -470,7 +693,7 @@
             const el = $(`content-${m.tabKey}`);
             if (el) {
               const header = el.querySelector(".content-header");
-              el.innerHTML = marked.parse(m.fullText || "");
+              renderMarkdown(el, m.fullText);
               if (header) el.prepend(header);
               updateStatuses(m);
               if (q(".tab.active")?.dataset.key === m.tabKey)
@@ -502,7 +725,7 @@
               contents[k] = v || "";
               const el = $(`content-${k}`);
               if (el) {
-                el.innerHTML = marked.parse(v || "");
+                renderMarkdown(el, v);
                 renderActiveHeader();
               }
             });
@@ -537,6 +760,11 @@
             $("tabs-list").innerHTML = "";
             $("content-area").innerHTML =
               '<div style="text-align:center;padding-top:80px;color:var(--vscode-descriptionForeground);">请选择一个文件开始 AI 分析</div>';
+            break;
+
+          case "themeChanged":
+            console.log("themeChanged");
+            highlightAll();
             break;
         }
       });

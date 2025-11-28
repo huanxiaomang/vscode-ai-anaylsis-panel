@@ -2,7 +2,7 @@
   "name": "hxm-ai-analyzer-panel",
   "displayName": "Code Insight Panel",
   "description": "Real-time customizable AI code analysis panel",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "publisher": "huanxiaomang",
   "license": "MIT",
   "engines": {
@@ -17,50 +17,51 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:aiAnalyze.openPreview",
+    "onCommand:codeInsightPanel.openPreview",
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "aiAnalyze.openPreview",
-        "title": "启动AI分析视图"
+        "command": "codeInsightPanel.openPreview",
+        "title": "启动 AI 分析视图"
       }
     ],
     "menus": {
       "explorer/context": [
         {
-          "command": "aiAnalyze.openPreview",
+          "command": "codeInsightPanel.openPreview",
+          "when": "!explorerResourceIsFolder",
           "group": "navigation",
           "title": "启动 AI 分析视图"
         }
       ]
     },
     "configuration": {
-      "title": "AI Code Analyzer Panel",
+      "title": "Code Insight Panel",
       "properties": {
-        "aiAnalyze.apiKey": {
+        "codeInsightPanel.apiKey": {
           "type": "string",
           "default": "",
           "description": "API Key"
         },
-        "aiAnalyze.apiEndpoint": {
+        "codeInsightPanel.apiEndpoint": {
           "type": "string",
           "default": "https://api.openai.com/v1/chat/completions",
           "description": "API Endpoint"
         },
-        "aiAnalyze.model": {
+        "codeInsightPanel.model": {
           "type": "string",
           "default": "gpt-4o-mini",
           "description": "Model name"
         },
-        "aiAnalyze.maxParallelRequests": {
+        "codeInsightPanel.maxParallelRequests": {
           "type": "number",
           "default": 30,
           "description": "Maximum number of parallel AI requests"
         },
-        "aiAnalyze.tabs": {
+        "codeInsightPanel.tabs": {
           "type": "array",
           "default": [
             {
@@ -123,11 +124,13 @@
   },
   "scripts": {
     "compile": "tsdown",
+    "build": "cross-env NODE_ENV=production tsdown",
     "watch": "tsdown --watch"
   },
   "devDependencies": {
     "@types/node": "18.x",
     "@types/vscode": "^1.80.0",
+    "cross-env": "^10.1.0",
     "tsdown": "^0.16.8",
     "typescript": "^5.1.3"
   }

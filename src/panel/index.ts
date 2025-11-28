@@ -16,6 +16,7 @@ export function activatePanel(context: vscode.ExtensionContext, uri?: vscode.Uri
 
     // Initial file switch
     const targetUri = uri || vscode.window.activeTextEditor?.document.uri;
+    Logger.info(`Initial file switch: ${targetUri?.fsPath}`);
     if (targetUri) {
         switchFile(targetUri.fsPath);
     } else {
@@ -74,13 +75,11 @@ export function switchFile(filePath: string) {
 
     const tabs = getTabs();
 
-
     if (cached) {
         // Calculate which tabs need to be requested (none, since we have cache)
         const needRequestArray: string[] = tabs
             .filter(t => !t.disable && cached.status[t.key] !== 'completed')
             .map(t => t.key);
-        Logger.info(`Switching to file ${filePath}, need to request tabs: ${needRequestArray.join(", ")}`);
         // Send tabs first, then load cached data
         postMessage({
             command: "initTabs",
@@ -124,6 +123,10 @@ export function handleFileSave(filePath: string) {
     }
 }
 
+export function notifyThemeChange() {
+    postMessage({ command: "themeChanged" });
+}
+
 async function analyzeCurrentFile(forceRegenerate: boolean, explicitFilePath?: string) {
     const state = getState();
     let filePath = explicitFilePath || state.currentFile;
@@ -157,7 +160,7 @@ async function analyzeCurrentFile(forceRegenerate: boolean, explicitFilePath?: s
     const tabs = getTabs();
 
     if (tabs.length === 0) {
-        postMessage({ command: "error", text: "请在设置中配置 aiAnalyze.tabs" });
+        postMessage({ command: "error", text: "请在设置中配置 codeInsightPanel.tabs" });
         return;
     }
 

@@ -3,10 +3,10 @@ import * as panel from './panel';
 import { Logger } from './utils/logger';
 
 export function activate(context: vscode.ExtensionContext) {
-    Logger.info('AI Code Analyzer is now active!');
+    Logger.info('Code Insight Panel is now active!');
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('aiAnalyze.openPreview', (uri?: vscode.Uri) => {
+        vscode.commands.registerCommand('codeInsightPanel.openPreview', (uri?: vscode.Uri) => {
             panel.activatePanel(context, uri);
         })
     );
@@ -22,6 +22,12 @@ export function activate(context: vscode.ExtensionContext) {
             if (editor && panel.getPanel()) {
                 panel.switchFile(editor.document.fileName);
             }
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.window.onDidChangeActiveColorTheme(() => {
+            panel.notifyThemeChange();
         })
     );
 }

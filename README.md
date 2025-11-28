@@ -79,28 +79,28 @@ AI Code Analyzer Panel 是一个强大的 VS Code 扩展，通过可自定义的
 
 在使用前，需要配置 AI 服务相关参数。打开 VS Code 设置（`Ctrl+,`），搜索 `AI Code Analyzer`：
 
-#### 1. API Key (`aiAnalyze.apiKey`)
+#### 1. API Key (`codeInsightPanel.apiKey`)
 
 你的 OpenAI API Key 或兼容服务的 API Key
 
 ```json
-"aiAnalyze.apiKey": "sk-xxx..."
+"codeInsightPanel.apiKey": "sk-xxx..."
 ```
 
-#### 2. API Endpoint (`aiAnalyze.apiEndpoint`)
+#### 2. API Endpoint (`codeInsightPanel.apiEndpoint`)
 
 API 服务地址，默认为 OpenAI，也可使用其他兼容服务
 
 ```json
-"aiAnalyze.apiEndpoint": "https://api.openai.com/v1/chat/completions"
+"codeInsightPanel.apiEndpoint": "https://api.openai.com/v1/chat/completions"
 ```
 
-#### 3. Model (`aiAnalyze.model`)
+#### 3. Model (`codeInsightPanel.model`)
 
 使用的 AI 模型
 
 ```json
-"aiAnalyze.model": "gpt-4o-mini"
+"codeInsightPanel.model": "gpt-4o-mini"
 ```
 
 ![设置界面](images/setting.png)
@@ -111,19 +111,19 @@ API 服务地址，默认为 OpenAI，也可使用其他兼容服务
 
 ```json
 {
-  "aiAnalyze.model": "moonshotai/Kimi-K2-Instruct",
-  "aiAnalyze.apiEndpoint": "https://api.siliconflow.cn/v1/chat/completions",
-  "aiAnalyze.apiKey": "你的apiKey"
+  "codeInsightPanel.model": "moonshotai/Kimi-K2-Instruct",
+  "codeInsightPanel.apiEndpoint": "https://api.siliconflow.cn/v1/chat/completions",
+  "codeInsightPanel.apiKey": "你的apiKey"
 }
 ```
 
 ### 自定义分析维度
 
-扩展默认提供三个分析维度，你可以在设置中自定义 `aiAnalyze.tabs`：
+扩展默认提供三个分析维度，你可以在设置中自定义 `codeInsightPanel.tabs`：
 
 ```json
 {
-  "aiAnalyze.tabs": [
+  "codeInsightPanel.tabs": [
     {
       "key": "summary",
       "title": "内容概览",

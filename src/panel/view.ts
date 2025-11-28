@@ -4,6 +4,7 @@ import { cancelAllTasks, cancelAllTasksForFile } from './ai';
 
 let currentPanel: vscode.WebviewPanel | undefined;
 let _disposables: vscode.Disposable[] = [];
+let _messageDisposable: vscode.Disposable | undefined;
 let _extensionUri: vscode.Uri | undefined;
 
 export function getPanel() {
@@ -24,7 +25,7 @@ export function createOrShow(extensionUri: vscode.Uri, globalState: vscode.Memen
     }
 
     const panel = vscode.window.createWebviewPanel(
-        "aiAnalysis",
+        "Code Insight Panel",
         "AI分析视图",
         column || vscode.ViewColumn.One,
         {
@@ -42,16 +43,30 @@ export function createOrShow(extensionUri: vscode.Uri, globalState: vscode.Memen
 }
 
 export function dispose() {
-    currentPanel = undefined;
-
-    cancelAllTasks();
-
-    clearState();
-
-    if (currentPanel) {
-        (currentPanel as vscode.WebviewPanel).dispose();
+    // If already disposed, do nothing
+    if (!currentPanel) {
+        return;
     }
 
+    const panel = currentPanel;
+    currentPanel = undefined;
+    updateCurrentFile('')
+    cancelAllTasks();
+
+    // Dispose the panel only if it's not already being disposed by VS Code
+    // (We check this by seeing if this function was called from onDidDispose)
+    // However, since we set currentPanel = undefined above, subsequent calls won't reach here.
+    // The issue is likely that we are calling .dispose() on an already disposing panel
+    // or accessing properties of a disposed panel.
+
+    // Actually, the error "Webview is disposed" usually happens when we try to access
+    // properties of `currentPanel` AFTER it has been disposed.
+
+    // Clean up disposables
+    if (_messageDisposable) {
+        _messageDisposable.dispose();
+        _messageDisposable = undefined;
+    }
     _disposables.forEach(d => d.dispose());
     _disposables = [];
 }
@@ -71,12 +86,12 @@ async function update(panel: vscode.WebviewPanel) {
 
 export function registerMessageListener(callback: (message: any) => void) {
     if (currentPanel) {
-        // Clear existing listeners first
-        _disposables.forEach(d => d.dispose());
-        _disposables = [];
+        // Clear existing message listener first
+        if (_messageDisposable) {
+            _messageDisposable.dispose();
+            _messageDisposable = undefined;
+        }
         // Register new listener
-        _disposables.push(
-            currentPanel.webview.onDidReceiveMessage(callback)
-        );
+        _messageDisposable = currentPanel.webview.onDidReceiveMessage(callback);
     }
 }

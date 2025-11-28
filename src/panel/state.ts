@@ -38,7 +38,7 @@ export function updateCurrentFile(file: string) {
 
 export function getTabs() {
     if (state.tabs.length > 0) return state.tabs;
-    const config = vscode.workspace.getConfiguration("aiAnalyze");
+    const config = vscode.workspace.getConfiguration("codeInsightPanel");
     state.tabs = config.get<TabConfig[]>("tabs") || [];
     return state.tabs;
 }

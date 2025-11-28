@@ -2,11 +2,16 @@ import { defineConfig } from 'tsdown'
 import { renameSync } from 'node:fs'
 import { resolve } from 'node:path'
 
+const isProduction = process.env.NODE_ENV === 'production'
+
 export default defineConfig({
     entry: ['./src/extension.ts'],
     outDir: './out',
     clean: true,
     minify: true,
+    define: {
+        __DEV__: JSON.stringify(!isProduction),
+    },
     onSuccess() {
         const oldPath = resolve('./out/extension.cjs')
         const newPath = resolve('./out/extension.js')
