@@ -75,6 +75,42 @@
 
 ---
 
+### 进阶：自定义 tab
+
+扩展默认提供几个分析维度，每个维度有对应的提示词，你可以编辑对应的提示词。
+
+你可以在设置中自定义 `codeInsightPanel.tabs`：
+
+```json
+{
+  "codeInsightPanel.tabs": [
+    {
+      "key": "summary",
+      "title": "内容概览",
+      "prompt": "请分析文件 ${fileName}：${codeContent}，提供简洁的功能概述..."
+    },
+    {
+      "key": "implementation",
+      "title": "核心实现",
+      "prompt": "详细说明文件 ${fileName}：${codeContent} 的核心实现逻辑..."
+    },
+    {
+      "key": "optimization",
+      "title": "优化建议",
+      "prompt": "针对文件 ${fileName}：${codeContent}，提供具体的代码优化建议..."
+    }
+  ]
+}
+```
+
+```
+
+数组的每一项分别对应一个 tab，写好 prompt 提示词后，插件会自动携带它们并发送给 AI。
+
+你可以根据需要添加或删除 tab。
+
+![Tabs](../images/tabs.png)
+
 ## ❓ 常见问题
 
 <details>
@@ -90,3 +126,4 @@ A: 硅基流动提供免费的 API 额度，非常适合新手入门使用。
 A: 在硅基流动控制台重新生成一个新的 API Key 即可。
 
 </details>
+```

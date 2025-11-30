@@ -2,7 +2,7 @@
   "name": "hxm-ai-analyzer-panel",
   "displayName": "Code Insight Panel",
   "description": "Real-time customizable AI code analysis panel",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "publisher": "huanxiaomang",
   "license": "MIT",
   "engines": {

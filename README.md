@@ -105,17 +105,17 @@ API 服务地址，默认为 OpenAI，也可使用其他兼容服务
     {
       "key": "summary",
       "title": "内容概览",
-      "prompt": "请分析文件 ${fileName}，提供简洁的功能概述..."
+      "prompt": "请分析文件 ${fileName}：${codeContent}，提供简洁的功能概述..."
     },
     {
       "key": "implementation",
       "title": "核心实现",
-      "prompt": "详细说明文件 ${fileName} 的核心实现逻辑..."
+      "prompt": "详细说明文件 ${fileName}：${codeContent} 的核心实现逻辑..."
     },
     {
       "key": "optimization",
       "title": "优化建议",
-      "prompt": "针对文件 ${fileName}，提供具体的代码优化建议..."
+      "prompt": "针对文件 ${fileName}：${codeContent}，提供具体的代码优化建议..."
     }
   ]
 }
